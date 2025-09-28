@@ -172,18 +172,21 @@ class _AddEditLegsState extends State<AddEditLegs> {
 
   Widget _buildOptionChainTable(double maxOI) {
     return SingleChildScrollView(
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Theme.of(context).dividerColor),
-        ),
-        child: Column(
-          children: [
-            // Table header
-            _buildTableHeader(),
-
-            // Table rows
-            ...widget.rows.map((row) => _buildOptionChainRow(row, maxOI)),
-          ],
+      scrollDirection: Axis.horizontal,
+      child: SingleChildScrollView(
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Theme.of(context).dividerColor),
+          ),
+          child: Column(
+            children: [
+              // Table header
+              _buildTableHeader(),
+      
+              // Table rows
+              ...widget.rows.map((row) => _buildOptionChainRow(row, maxOI)),
+            ],
+          ),
         ),
       ),
     );

@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:oi_visualizer/oi_visualizer.dart';
 
@@ -11,6 +12,7 @@ class EnhancedStrategyDemo extends StatefulWidget {
 class _EnhancedStrategyDemoState extends State<EnhancedStrategyDemo> {
   BuilderData? _builderData;
   List<OptionLeg> _optionLegs = [];
+  List<DataItem> _oiData = [];
   bool _isLoading = false;
   bool _hasError = false;
 
@@ -21,6 +23,23 @@ class _EnhancedStrategyDemoState extends State<EnhancedStrategyDemo> {
   }
 
   void _createDemoData() {
+    // Create sample OI data
+    _oiData = [
+      for (double strike = 20000; strike <= 22000; strike += 50)
+        DataItem(
+          strikePrice: strike,
+          expiryDate: '2024-03-28',
+          ce: ContractData(
+            openInterest: _generateRandomOI(strike, 21050.5, true),
+            changeinOpenInterest: _generateRandomChangeOI(),
+          ),
+          pe: ContractData(
+            openInterest: _generateRandomOI(strike, 21050.5, false),
+            changeinOpenInterest: _generateRandomChangeOI(),
+          ),
+        ),
+    ];
+
     // Create sample option legs
     _optionLegs = [
       OptionLeg(
@@ -80,6 +99,28 @@ class _EnhancedStrategyDemoState extends State<EnhancedStrategyDemo> {
     final intrinsicValue = spotPrice > strike ? spotPrice - strike : 0.0;
     final payoff = intrinsicValue - premium;
     return isBuy ? payoff : -payoff;
+  }
+
+  int _generateRandomOI(double strike, double atmPrice, bool isCall) {
+    final random = Random();
+
+    // Generate higher OI near ATM strikes
+    final distanceFromATM = (strike - atmPrice).abs();
+    final normalizedDistance = distanceFromATM / 500; // Normalize by 500 points
+
+    // Base OI decreases as we move away from ATM
+    final baseOI = (50000 * (1 / (1 + normalizedDistance))).round();
+
+    // Add some randomness
+    final randomFactor = 0.5 + random.nextDouble(); // 0.5 to 1.5
+
+    return (baseOI * randomFactor).round();
+  }
+
+  double _generateRandomChangeOI() {
+    final random = Random();
+    // Generate random change in OI between -5000 and +5000
+    return (random.nextDouble() - 0.5) * 10000;
   }
 
   void _simulateLoading() {
@@ -176,6 +217,7 @@ class _EnhancedStrategyDemoState extends State<EnhancedStrategyDemo> {
                 underlyingPrice: 21050.5,
                 targetUnderlyingPrice: 21075.0,
                 payoffAtTarget: 45.5,
+                oiData: _oiData,
               ),
             ),
 

@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import '../models/builder_data.dart';
 import '../models/option_leg.dart';
+import '../models/data_item.dart';
 import 'pnl_chart.dart';
+
+enum BackgroundChartType {
+  openInterest,
+  changeInOI,
+  none,
+}
 
 class EnhancedPNLVisualizer extends StatefulWidget {
   final BuilderData? builderData;
@@ -13,6 +20,7 @@ class EnhancedPNLVisualizer extends StatefulWidget {
   final double? underlyingPrice;
   final double? targetUnderlyingPrice;
   final double? payoffAtTarget;
+  final List<DataItem>? oiData;
 
   const EnhancedPNLVisualizer({
     super.key,
@@ -25,6 +33,7 @@ class EnhancedPNLVisualizer extends StatefulWidget {
     this.underlyingPrice,
     this.targetUnderlyingPrice,
     this.payoffAtTarget,
+    this.oiData,
   });
 
   @override
@@ -32,6 +41,9 @@ class EnhancedPNLVisualizer extends StatefulWidget {
 }
 
 class _EnhancedPNLVisualizerState extends State<EnhancedPNLVisualizer> {
+  BackgroundChartType _oiChartType = BackgroundChartType.openInterest;
+  bool _showOIChart = true;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -69,9 +81,57 @@ class _EnhancedPNLVisualizerState extends State<EnhancedPNLVisualizer> {
             ),
           ),
           const Spacer(),
+          _buildOIControls(),
+          const SizedBox(width: 16),
           _buildLegend(),
         ],
       ),
+    );
+  }
+
+  Widget _buildOIControls() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // OI Chart Toggle
+        Switch(
+          value: _showOIChart,
+          onChanged: (value) {
+            setState(() {
+              _showOIChart = value;
+            });
+          },
+        ),
+        const SizedBox(width: 8),
+        Text(
+          'OI Chart',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(width: 16),
+        // Chart Type Dropdown
+        if (_showOIChart) ...[
+          DropdownButton<BackgroundChartType>(
+            value: _oiChartType,
+            onChanged: (BackgroundChartType? newValue) {
+              if (newValue != null) {
+                setState(() {
+                  _oiChartType = newValue;
+                });
+              }
+            },
+            items: const [
+              DropdownMenuItem(
+                value: BackgroundChartType.openInterest,
+                child: Text('Open Interest'),
+              ),
+              DropdownMenuItem(
+                value: BackgroundChartType.changeInOI,
+                child: Text('Change in OI'),
+              ),
+            ],
+          ),
+        ],
+      ],
     );
   }
 
@@ -79,6 +139,18 @@ class _EnhancedPNLVisualizerState extends State<EnhancedPNLVisualizer> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (_showOIChart && widget.oiData != null) ...[
+          _buildLegendItem(
+            'Call OI',
+            Colors.red.withValues(alpha: 0.6),
+          ),
+          const SizedBox(width: 12),
+          _buildLegendItem(
+            'Put OI',
+            Colors.green.withValues(alpha: 0.6),
+          ),
+          const SizedBox(width: 20),
+        ],
         _buildLegendItem(
           'Target',
           Theme.of(context).colorScheme.primary,
@@ -139,6 +211,8 @@ class _EnhancedPNLVisualizerState extends State<EnhancedPNLVisualizer> {
       isError: widget.isError,
       errorMessage: widget.errorMessage,
       onRetry: widget.onRetry,
+      oiData: widget.oiData,
+      oiChartType: _showOIChart ? _oiChartType : BackgroundChartType.none,
     );
   }
 

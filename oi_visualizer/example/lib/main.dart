@@ -176,6 +176,7 @@ class _OIVisualizerDemoState extends State<OIVisualizerDemo> {
                   expiries: _transformedData?.filteredExpiries ?? [],
                   selectedExpiry: _selectedExpiry,
                   underlyingPrice: _transformedData?.underlyingValue,
+                  oiData: _transformedData?.grouped![_selectedExpiry]?.data,
                   onCalculatePnl:
                       ({
                         required underlyingPrice,

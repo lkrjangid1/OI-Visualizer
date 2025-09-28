@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:oi_visualizer/src/models/data_item.dart';
 import '../models/builder_data.dart';
 import '../models/option_leg.dart';
 import '../theme/oi_theme.dart';
@@ -12,6 +13,7 @@ class PNLVisualizer extends StatelessWidget {
   bool isError;
   String? errorMessage;
   VoidCallback? onCalculatePNL;
+  List<DataItem>? oiData;
 
   PNLVisualizer({
     super.key,
@@ -21,6 +23,7 @@ class PNLVisualizer extends StatelessWidget {
     this.isError = false,
     this.errorMessage,
     this.onCalculatePNL,
+    this.oiData,
   });
 
   @override
@@ -291,7 +294,7 @@ class PNLVisualizer extends StatelessWidget {
   Widget _buildChart(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      child: PNLChart(data: data!),
+      child: PNLChart(data: data!, oiData: oiData,),
     );
   }
 }

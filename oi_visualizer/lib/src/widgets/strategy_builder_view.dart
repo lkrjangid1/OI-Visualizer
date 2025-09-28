@@ -23,6 +23,7 @@ class StrategyBuilderView extends StatefulWidget {
   onCalculatePnl;
   final String? nextUpdateAt;
   final ValueChanged<String>? onExpiryChanged;
+  final List<DataItem>? oiData;
 
   const StrategyBuilderView({
     super.key,
@@ -34,6 +35,7 @@ class StrategyBuilderView extends StatefulWidget {
     required this.onCalculatePnl,
     this.nextUpdateAt,
     this.onExpiryChanged,
+    this.oiData,
   });
 
   @override
@@ -181,6 +183,7 @@ class _StrategyBuilderViewState extends State<StrategyBuilderView> {
                         isError: _error != null,
                         errorMessage: _error,
                         onCalculatePNL: _calculatePNL,
+                        oiData: widget.oiData,
                       ),
                       if ((_data?.projectedFuturesPrices ?? []).isNotEmpty) ...[
                         SizedBox(height: 20),
@@ -253,6 +256,7 @@ class _StrategyBuilderViewState extends State<StrategyBuilderView> {
                     isError: _error != null,
                     errorMessage: _error,
                     onCalculatePNL: _calculatePNL,
+                    oiData: widget.oiData,
                   ),
 
                   if ((_data?.projectedFuturesPrices ?? []).isNotEmpty) ...[

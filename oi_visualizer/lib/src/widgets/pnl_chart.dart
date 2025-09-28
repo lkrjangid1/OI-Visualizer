@@ -1,7 +1,10 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../models/builder_data.dart';
+import '../models/data_item.dart';
 import '../utils/chart_utils.dart';
 import 'chart_components.dart';
+import 'enhanced_pnl_visualizer.dart';
 
 class PNLChart extends StatefulWidget {
   final BuilderData data;
@@ -9,6 +12,8 @@ class PNLChart extends StatefulWidget {
   final bool isError;
   final String? errorMessage;
   final VoidCallback? onRetry;
+  final List<DataItem>? oiData;
+  final BackgroundChartType oiChartType;
 
   const PNLChart({
     super.key,
@@ -17,6 +22,8 @@ class PNLChart extends StatefulWidget {
     this.isError = false,
     this.errorMessage,
     this.onRetry,
+    this.oiData,
+    this.oiChartType = BackgroundChartType.none,
   });
 
   @override
@@ -64,6 +71,8 @@ class _PNLChartState extends State<PNLChart> {
                   data: widget.data,
                   context: context,
                   crosshairPosition: _crosshairPosition,
+                  oiData: widget.oiData,
+                  oiChartType: widget.oiChartType,
                 ),
               ),
             ),
@@ -284,11 +293,15 @@ class EnhancedPNLChartPainter extends CustomPainter {
   final BuilderData data;
   final BuildContext context;
   final Offset? crosshairPosition;
+  final List<DataItem>? oiData;
+  final BackgroundChartType oiChartType;
 
   EnhancedPNLChartPainter({
     required this.data,
     required this.context,
     this.crosshairPosition,
+    this.oiData,
+    this.oiChartType = BackgroundChartType.none,
   });
 
   @override
@@ -316,6 +329,21 @@ class EnhancedPNLChartPainter extends CustomPainter {
     final scaleInfo = ChartUtils.calculateScale(validPayoffs, padding: 0.15);
     final yMin = scaleInfo.min;
     final yRange = scaleInfo.range;
+
+    // Draw OI background chart if enabled
+    if (oiChartType != BackgroundChartType.none && oiData != null) {
+      _drawOIBackgroundChart(
+        canvas,
+        size,
+        margin,
+        chartWidth,
+        chartHeight,
+        xMin,
+        xRange,
+        yMin,
+        yRange,
+      );
+    }
 
     // Draw enhanced axes
     ChartAxis.drawXAxis(
@@ -556,9 +584,107 @@ class EnhancedPNLChartPainter extends CustomPainter {
     }
   }
 
+  void _drawOIBackgroundChart(
+    Canvas canvas,
+    Size size,
+    double margin,
+    double chartWidth,
+    double chartHeight,
+    double xMin,
+    double xRange,
+    double yMin,
+    double yRange,
+  ) {
+    if (oiData == null || oiData!.isEmpty) return;
+
+    // Calculate max OI for scaling
+    double maxCallOI = 0;
+    double maxPutOI = 0;
+    double maxCallChangeOI = 0;
+    double maxPutChangeOI = 0;
+
+    for (final item in oiData!) {
+      if (item.ce?.openInterest != null) {
+        maxCallOI = math.max(maxCallOI, item.ce!.openInterest!.toDouble());
+      }
+      if (item.pe?.openInterest != null) {
+        maxPutOI = math.max(maxPutOI, item.pe!.openInterest!.toDouble());
+      }
+      if (item.ce?.changeinOpenInterest != null) {
+        maxCallChangeOI = math.max(maxCallChangeOI, item.ce!.changeinOpenInterest!.abs());
+      }
+      if (item.pe?.changeinOpenInterest != null) {
+        maxPutChangeOI = math.max(maxPutChangeOI, item.pe!.changeinOpenInterest!.abs());
+      }
+    }
+
+    final maxOI = oiChartType == BackgroundChartType.openInterest
+        ? math.max(maxCallOI, maxPutOI)
+        : math.max(maxCallChangeOI, maxPutChangeOI);
+
+    if (maxOI == 0) return;
+
+    // Draw bars
+    for (final item in oiData!) {
+      if (item.strikePrice == null) continue;
+
+      final x = margin + (item.strikePrice! - xMin) / xRange * chartWidth;
+      final barWidth = chartWidth / (oiData!.length * 2);
+
+      // Draw Call OI bar (red)
+      if (item.ce != null) {
+        final oiValue = oiChartType == BackgroundChartType.openInterest
+            ? item.ce!.openInterest?.toDouble() ?? 0
+            : item.ce!.changeinOpenInterest ?? 0;
+
+        if (oiValue != 0) {
+          final barHeight = (oiValue.abs() / maxOI) * chartHeight * 0.3; // 30% of chart height
+          final barY = oiChartType == BackgroundChartType.changeInOI && oiValue < 0
+              ? margin + chartHeight - barHeight
+              : margin + chartHeight - barHeight;
+
+          final color = oiChartType == BackgroundChartType.changeInOI && oiValue < 0
+              ? Colors.red.withValues(alpha: 0.3)
+              : Colors.red.withValues(alpha: 0.6);
+
+          canvas.drawRect(
+            Rect.fromLTWH(x - barWidth, barY, barWidth, barHeight),
+            Paint()..color = color,
+          );
+        }
+      }
+
+      // Draw Put OI bar (green)
+      if (item.pe != null) {
+        final oiValue = oiChartType == BackgroundChartType.openInterest
+            ? item.pe!.openInterest?.toDouble() ?? 0
+            : item.pe!.changeinOpenInterest ?? 0;
+
+        if (oiValue != 0) {
+          final barHeight = (oiValue.abs() / maxOI) * chartHeight * 0.3; // 30% of chart height
+          final barY = oiChartType == BackgroundChartType.changeInOI && oiValue < 0
+              ? margin + chartHeight - barHeight
+              : margin + chartHeight - barHeight;
+
+          final color = oiChartType == BackgroundChartType.changeInOI && oiValue < 0
+              ? Colors.green.withValues(alpha: 0.3)
+              : Colors.green.withValues(alpha: 0.6);
+
+          canvas.drawRect(
+            Rect.fromLTWH(x, barY, barWidth, barHeight),
+            Paint()..color = color,
+          );
+        }
+      }
+    }
+  }
+
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
     if (oldDelegate is! EnhancedPNLChartPainter) return true;
-    return data != oldDelegate.data || crosshairPosition != oldDelegate.crosshairPosition;
+    return data != oldDelegate.data ||
+           crosshairPosition != oldDelegate.crosshairPosition ||
+           oiData != oldDelegate.oiData ||
+           oiChartType != oldDelegate.oiChartType;
   }
 }
