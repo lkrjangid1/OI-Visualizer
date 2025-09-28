@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import axios from 'axios';
 import UserAgent from 'user-agents';
 import { formatData, getPayoffData } from './utils.js';
@@ -18,6 +19,26 @@ const getOptionsWithUserAgent = () => {
 };
 
 const app = express();
+
+// CORS configuration
+const corsOptions = {
+  origin: [
+    'http://localhost:3000',
+    'http://0.0.0.0:3000',
+    'http://127.0.0.1:3000',
+    'http://10.209.202.200:3000',
+    'http://localhost:8080',
+    'http://0.0.0.0:8080',
+    'http://127.0.0.1:8080',
+    'http://10.209.202.200:8080'
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
@@ -89,6 +110,11 @@ app.post('/builder', async (req, res) => {
   
 });
 
-app.listen(6123, () => {
-  console.log('Server running on port 6123');
+const PORT = process.env.PORT || 6123;
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(`API endpoints:`);
+  console.log(`  - GET  http://localhost:${PORT}/open-interest?identifier=NIFTY`);
+  console.log(`  - POST http://localhost:${PORT}/builder`);
 });
