@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:oi_visualizer/src/widgets/strategy_builder_chart/advance_pnl_chart.dart';
 import '../models/builder_data.dart';
 import '../models/option_leg.dart';
 import '../models/data_item.dart';
@@ -176,15 +177,21 @@ class _StrategyBuilderViewState extends State<StrategyBuilderView> {
                   child: Column(
                     children: [
                       // PNL Visualizer
-                      PNLVisualizer(
-                        data: _data,
+                      if(_data != null)
+                      AdvancedPNLChart(
+                        builderData: _data,
                         optionLegs: _optionLegs,
-                        isLoading: _isLoading,
-                        isError: _error != null,
-                        errorMessage: _error,
-                        onCalculatePNL: _calculatePNL,
                         oiData: widget.oiData,
                       ),
+                      // PNLVisualizer(
+                      //   data: _data,
+                      //   optionLegs: _optionLegs,
+                      //   isLoading: _isLoading,
+                      //   isError: _error != null,
+                      //   errorMessage: _error,
+                      //   onCalculatePNL: _calculatePNL,
+                      //   oiData: widget.oiData,
+                      // ),
                       if ((_data?.projectedFuturesPrices ?? []).isNotEmpty) ...[
                         SizedBox(height: 20),
 

@@ -26,11 +26,11 @@ const corsOptions = {
     'http://localhost:3000',
     'http://0.0.0.0:3000',
     'http://127.0.0.1:3000',
-    'http://10.209.202.200:3000',
+    'http://10.90.176.200:3000',
     'http://localhost:8080',
     'http://0.0.0.0:8080',
     'http://127.0.0.1:8080',
-    'http://10.209.202.200:8080'
+    'http://10.90.176.200:8080'
   ],
   credentials: true,
   optionsSuccessStatus: 200,

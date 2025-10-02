@@ -21,6 +21,11 @@ export 'src/widgets/pnl_controls.dart';
 export 'src/widgets/strategy_widget.dart';
 export 'src/widgets/add_edit_legs.dart';
 
+//Advance chart
+export 'src/widgets/strategy_builder_chart/advance_pnl_chart.dart';
+export 'src/widgets/strategy_builder_chart/advanced_option_chart_painter.dart';
+
+
 // Utils
 export 'src/utils/chart_utils.dart';
 
